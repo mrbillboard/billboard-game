@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Billboard Game</title>
+<style>
+  :root{
+    --navy:#0b2545;--navy2:#13315c;--blue:#1d6fb8;--accent:#f5a623;
+    --green:#1faa59;--red:#d64545;--paper:#f4f6fb;--card:#ffffff;--ink:#11243e;--muted:#6b7a90;
+    --purple:#7a4fd0;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    background:linear-gradient(160deg,var(--navy) 0%,var(--navy2) 55%,#0a1c33 100%);
+    color:var(--ink);min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:18px;
+  }
+  .wrap{width:100%;max-width:560px;}
+  header.brand{text-align:center;color:#fff;margin:6px 0 16px;}
+  .logo{display:inline-flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.5px;}
+  .logo .mark{width:34px;height:34px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;color:var(--navy);font-size:20px;font-weight:900;box-shadow:0 3px 10px rgba(0,0,0,.3);}
+  h1{font-size:26px;margin:10px 0 2px;color:#fff;letter-spacing:.3px;}
+  .tagline{color:#9fc0e6;font-size:13px;margin:0;}
+  .card{background:var(--card);border-radius:18px;padding:22px 20px 24px;box-shadow:0 18px 40px rgba(0,0,0,.35);}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-size:13px;color:var(--muted);font-weight:600;}
+  .pill{background:var(--paper);border-radius:999px;padding:5px 12px;}
+  .pill b{color:var(--navy);}
+  .bar{height:7px;background:var(--paper);border-radius:999px;overflow:hidden;margin-bottom:18px;}
+  .bar>span{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--accent));width:0;transition:width .35s ease;}
+  .tag{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--blue);background:#e8f1fb;border-radius:6px;padding:4px 9px;margin-bottom:12px;}
+  .tag.managed{color:#fff;background:var(--accent);}
+  .tag.fwy{color:#fff;background:var(--purple);}
+  .q{font-size:19px;font-weight:700;line-height:1.35;margin:0 0 18px;color:var(--ink);}
+  .q .hl{color:var(--blue);}
+  .opts{display:flex;flex-direction:column;gap:12px;}
+  .opt{text-align:left;border:2px solid #d8e2f0;background:#fff;border-radius:12px;padding:16px;font-size:16px;font-weight:600;color:var(--ink);cursor:pointer;transition:all .15s ease;display:flex;align-items:center;gap:12px;}
+  .opt:hover:not(:disabled){border-color:var(--blue);background:#f5f9ff;transform:translateY(-1px);box-shadow:0 4px 12px rgba(29,111,184,.15);}
+  .opt:disabled{cursor:default;}
+  .opt .ic{flex:0 0 24px;height:24px;border-radius:50%;border:2px solid #cdd7e6;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#fff;background:#aebccd;}
+  .opt.correct{border-color:var(--green);background:#eafaf0;}
+  .opt.correct .ic{background:var(--green);border-color:var(--green);}
+  .opt.wrong{border-color:var(--red);background:#fdeeee;}
+  .opt.wrong .ic{background:var(--red);border-color:var(--red);}
+  .opt.dim{opacity:.55;}
+  .feedback{margin-top:16px;font-size:14px;font-weight:600;min-height:20px;}
+  .feedback.good{color:var(--green);}
+  .feedback.bad{color:var(--red);}
+  .feedback small{display:block;color:var(--muted);font-weight:500;margin-top:3px;}
+  .hint{margin-top:18px;text-align:center;color:var(--muted);font-size:14px;font-weight:700;}
+  .hint .up{color:var(--blue);}
+  .next{margin-top:18px;width:100%;border:none;border-radius:14px;padding:18px;background:var(--accent);color:var(--navy);font-size:19px;font-weight:800;cursor:pointer;box-shadow:0 8px 18px rgba(245,166,35,.5);transition:transform .15s;display:none;letter-spacing:.3px;}
+  .next.show{display:block;animation:pop .35s ease;}
+  .next:hover{transform:translateY(-2px);}
+  @keyframes pop{0%{transform:scale(.94);opacity:.3}100%{transform:scale(1);opacity:1}}
+  .center{text-align:center;}
+  .lead{color:var(--muted);font-size:15px;line-height:1.5;margin:6px 0 18px;}
+  .btn-primary{border:none;border-radius:14px;padding:20px 26px;background:var(--accent);color:var(--navy);font-size:20px;font-weight:900;cursor:pointer;width:100%;box-shadow:0 8px 18px rgba(245,166,35,.5);transition:transform .15s;letter-spacing:.3px;}
+  .btn-primary:hover{transform:translateY(-2px);}
+  .score-num{font-size:54px;font-weight:900;color:var(--navy);line-height:1;margin:8px 0;}
+  .score-num span{font-size:26px;color:var(--muted);font-weight:700;}
+  .verdict{font-size:18px;font-weight:800;margin:4px 0 6px;}
+  .stats{display:flex;gap:10px;justify-content:center;margin:18px 0 22px;flex-wrap:wrap;}
+  .stat{background:var(--paper);border-radius:12px;padding:12px 16px;min-width:90px;}
+  .stat b{display:block;font-size:22px;color:var(--navy);}
+  .stat small{color:var(--muted);font-size:12px;}
+  .footnote{color:#9fc0e6;font-size:11px;text-align:center;margin-top:14px;line-height:1.5;}
+  ul.facts{text-align:left;color:var(--muted);font-size:13px;line-height:1.6;margin:0 0 18px;padding-left:18px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="brand">
+    <div class="logo"><span class="mark">B</span><span>BRAYPRO &middot; BRAY MEDIA 360</span></div>
+    <h1>The Billboard Game</h1>
+    <p class="tagline">How well do you know your own inventory?</p>
+  </header>
+  <div class="card" id="screen"></div>
+  <p class="footnote">Built from real Dallas Billboards LLC &amp; Bray Outdoor Ads inventory in BrayPro.<br>Markets: DFW, Orange County (incl. every OC freeway), and Los Angeles &mdash; plus your 12 managed boards.</p>
+</div>
+
+<script>
+/* ============================================================
+   REAL DATA — pulled live from braypro.com PAS (June 2026)
+   ============================================================ */
+
+/* General market pool: [board#, vendor, city, zip, marketCode] */
+const RAW = [
+["380P-BL","Dallas Billboards","Princeton","75407","DFW"],
+["078777","Clear Channel","Dallas","75006","DFW"],
+["301570","Dallas Billboards","Greenville","75402","DFW"],
+["5520RD","Brown Outdoor (Dan Reiss)","McKinney","75069","DFW"],
+["175J-A","Dallas Billboards","Seagoville","75159","DFW"],
+["800B-D2","Primary Media","Frisco","75035","DFW"],
+["777SF","Rex Outdoor","Celina","75009","DFW"],
+["Bv-101-B","Media Choice","Arlington","76011","DFW"],
+["DAL-DG-504","Orange Barrel Media","Irving","75039","DFW"],
+["D0005","ODSTX","Carrollton","75010","DFW"],
+["1303","ODSTX","Gainesville","76240","DFW"],
+["1299","ODSTX","Jacksonville","75766","DFW"],
+["1291","ODSTX","Collinsville","76233","DFW"],
+["1281","ODSTX","Balch Springs","75180","DFW"],
+["1279","ODSTX","Belton","76513","DFW"],
+["1277","ODSTX","Corsicana","75109","DFW"],
+["1273","ODSTX","Fairfield","75840","DFW"],
+["1269","ODSTX","Terrell","75160","DFW"],
+["1265","ODSTX","Hillsboro","76645","DFW"],
+["1255","ODSTX","West","76691","DFW"],
+["1253","ODSTX","Whitesboro","76273","DFW"],
+["1249","ODSTX","Sadler","76264","DFW"],
+["1247","ODSTX","Sherman","75092","DFW"],
+["1244","ODSTX","Mildred","75109","DFW"],
+["1240","ODSTX","Plano","75024","DFW"],
+["1234","ODSTX","Hamilton","76531","DFW"],
+["1230","ODSTX","Ennis","75119","DFW"],
+["1209","ODSTX","Oak Ridge","76240","DFW"],
+["1194","ODSTX","Forney","75126","DFW"],
+["1184","ODSTX","Alvord","76225","DFW"],
+["1176","ODSTX","Rhome","76078","DFW"],
+["1170","ODSTX","Stephenville","76446","DFW"],
+["1166","ODSTX","Granbury","76048","DFW"],
+["1148","ODSTX","Cleburne","76033","DFW"],
+["1141","ODSTX","Keene","76031","DFW"],
+["1138","ODSTX","Venus","76009","DFW"],
+["1120","ODSTX","Ross","76684","DFW"],
+["1116","ODSTX","Elm Mott","76640","DFW"],
+["1096","ODSTX","Angus","75110","DFW"],
+["1092","ODSTX","Mustang","75109","DFW"],
+["731","Schober Outdoor","Quinlan","","DFW"],
+["276","Schober Outdoor","Azle","","DFW"],
+["298","Schober Outdoor","Carthage","","DFW"],
+["730","Schober Outdoor","Tawakoni","","DFW"],
+["646","Schober Outdoor","Fink","","DFW"],
+["654","Schober Outdoor","Denison","","DFW"],
+["661","Schober Outdoor","Greenville","","DFW"],
+["711","Schober Outdoor","Boyd","","DFW"],
+["725","Schober Outdoor","Union Valley","","DFW"],
+["645","Schober Outdoor","Pottsboro","","DFW"],
+["225A","Primary Media","McKinney","","DFW"],
+["1LB-WC-1","Clear Channel","Long Beach","90808","LA"],
+["008050","Clear Channel","West Hollywood","90069","LA"],
+["008021","Clear Channel","Los Angeles","90005","LA"],
+["S050169","Clear Channel","Industry","90601","LA"],
+["S009985","Clear Channel","Whittier","90605","LA"],
+["S009979","Clear Channel","East Los Angeles","90023","LA"],
+["S009939","Clear Channel","Willowbrook","90222","LA"],
+["S009887","Clear Channel","Pasadena","91001","LA"],
+["S009849","Clear Channel","East Los Angeles","90023","LA"],
+["S009132","Clear Channel","Burbank","91502","LA"],
+["S008943","Clear Channel","Santa Clarita","91351","LA"],
+["S008818","Clear Channel","San Dimas","91724","LA"],
+["S008785","Clear Channel","Azusa","91702","LA"],
+["S008604","Clear Channel","West Covina","91790","LA"],
+["S008546","Clear Channel","Commerce","90022","LA"],
+["S008506","Clear Channel","Carson","90746","LA"],
+["S008372","Clear Channel","Monterey Park","90022","LA"],
+["S008263","Clear Channel","Montebello","90022","LA"],
+["S007968","Clear Channel","Covina","91722","LA"],
+["S007940","Clear Channel","Santa Fe Springs","90606","LA"],
+["S007931","Clear Channel","Glendora","91724","LA"],
+["S007922","Clear Channel","Arcadia","91006","LA"],
+["S007908","Clear Channel","La Crescenta","91020","LA"],
+["S007904","Clear Channel","La Canada Flintridge","91020","LA"],
+["S007849","Clear Channel","Los Angeles","90731","LA"],
+["S007750","Clear Channel","La Puente","91744","LA"],
+["S007736","Clear Channel","La Mirada","90604","LA"],
+["S007459","Clear Channel","Irwindale","91722","LA"],
+["S006512","Clear Channel","Monrovia","91006","LA"],
+["S006272","Clear Channel","Torrance","90506","LA"],
+["S006270","Clear Channel","Hawthorne","90250","LA"],
+["S006208","Clear Channel","Rowland Heights","91748","LA"],
+["S006124","Clear Channel","Temple City","91775","LA"],
+["S006027","Clear Channel","Rancho Dominguez","90221","LA"],
+["S006023","Clear Channel","Gardena","90506","LA"],
+["S005969","Clear Channel","Glendale","91020","LA"],
+["S005951","Clear Channel","La Habra Heights","91745","LA"],
+["S005911","Clear Channel","Hacienda Heights","91745","LA"],
+["S005022","Clear Channel","Compton","90220","LA"],
+["S005020","Clear Channel","Lawndale","90260","LA"],
+["S004495","Clear Channel","San Marino","91107","LA"],
+["S004429","Clear Channel","Athens","90047","LA"],
+["665005050","Creative Outdoor","Los Angeles","","LA"],
+["137010010","Creative Outdoor","Palmdale","","LA"],
+["665005040","Creative Outdoor","Los Angeles","","LA"],
+["137008010","Creative Outdoor","Palmdale","","LA"],
+["S050325","Clear Channel","Anaheim","92801","OC"],
+["S050173","Clear Channel","Orange","92705","OC"],
+["S009909","Clear Channel","Tustin","92780","OC"],
+["S009869","Clear Channel","Seal Beach","90740","OC"],
+["S009846","Clear Channel","Irvine","92602","OC"],
+["S009721","Clear Channel","Costa Mesa","92626","OC"],
+["S009691","Clear Channel","Los Alamitos","90720","OC"],
+["S009657","Clear Channel","Brea","92821","OC"],
+["S009633","Clear Channel","Laguna Woods","92637","OC"],
+["S009619","Clear Channel","Laguna Hills","92653","OC"],
+["S008950","Clear Channel","Mission Viejo","92692","OC"],
+["S008396","Clear Channel","Fullerton","92832","OC"],
+["S007986","Clear Channel","Garden Grove","92841","OC"],
+["S006640","Clear Channel","Buena Park","90620","OC"],
+["S005843","Clear Channel","Westminster","92655","OC"],
+["S003046","Clear Channel","Laguna Beach","92651","OC"],
+["S002602","Clear Channel","Aliso Viejo","92656","OC"],
+["S002364","Clear Channel","Cypress","90630","OC"],
+["S002360","Clear Channel","Laguna Niguel","92677","OC"],
+["S008724","Clear Channel","Irvine","92612","OC"],
+["S049726","Clear Channel","Anaheim","92804","OC"],
+["S008908","Clear Channel","Orange","92865","OC"],
+["S009565","Clear Channel","Costa Mesa","92627","OC"],
+["287002250","Creative Outdoor","Westminster","","OC"],
+["286000340","Creative Outdoor","Stanton","","OC"],
+["285000290","Creative Outdoor","Seal Beach","","OC"],
+["284006921","Creative Outdoor","Santa Ana","","OC"],
+["283002760","Creative Outdoor","Huntington Beach","","OC"],
+["282001511","Creative Outdoor","Garden Grove","","OC"],
+["281001660","Creative Outdoor","Fullerton","","OC"],
+["280000920","Creative Outdoor","Fountain Valley","","OC"]
+];
+
+/* Cory's 12 personally-managed boards (authorized reseller).
+   [displayBoard, vendor, city, zip, road, facing, type, state] */
+const MGD = [
+["DAL-1380P-BL","Dallas Billboards","Princeton","75407","Hwy 380","W","Static","TX"],
+["DAL-1380P-AU","Dallas Billboards","Princeton","75407","University Dr","E","Static","TX"],
+["DAL-1380P-BU","Dallas Billboards","Princeton","75407","University Dr","W","Static","TX"],
+["DAL-12035-A","Dallas Billboards","Lancaster","75134","I-20","W","Static","TX"],
+["DAL-12035-B","Dallas Billboards","Lancaster","75134","I-20","E","Static","TX"],
+["DAL-1777-1","Dallas Billboards","Northlake","76262","I-35W","S","Digital","TX"],
+["DAL-1777-2","Dallas Billboards","Northlake","76262","I-35W","S","Digital","TX"],
+["DAL-1175J-A","Dallas Billboards","Seagoville","75159","Hwy 175","E","Static","TX"],
+["DAL-1175J-B","Dallas Billboards","Seagoville","75159","Hwy 175","W","Static","TX"],
+["DAL-16061","Dallas Billboards","Dallas","75206","Greenville Ave","N","Static","TX"],
+["DAL-1301570","Dallas Billboards","Greenville","75402","I-30","E","Static","TX"],
+["Rodeo 39 (Stanton)","Bray Outdoor Ads","Stanton","","Beach Blvd (near the 22 Fwy)","","Digital","CA"]
+];
+
+/* Every OC freeway board: [board#, freeway, city, vendor, facing] */
+const OCF = [
+["96","91","Anaheim","Regency Outdoor","W"],
+["93","22","Santa Ana","Regency Outdoor","W"],
+["92","22","Santa Ana","Regency Outdoor","E"],
+["57","57","Orange","Regency Outdoor","N"],
+["56","55","Santa Ana","Regency Outdoor","S"],
+["28","57","Anaheim","Regency Outdoor","S"],
+["27","57","Anaheim","Regency Outdoor","N"],
+["26","57","Anaheim","Regency Outdoor","S"],
+["16","57","Anaheim","Regency Outdoor","N"],
+["20","22","Westminster","Regency Outdoor","W"],
+["35008","22","Orange","Lamar","W"],
+["35007","22","Orange","Lamar","E"],
+["35006","5","Santa Ana","Lamar","S"],
+["35002","55","Santa Ana","Lamar","S"],
+["30014","91","Anaheim","Lamar","W"],
+["35005","5","Santa Ana","Lamar","NW"],
+["30015","91","Anaheim","Lamar","E"],
+["35001","55","Santa Ana","Lamar","N"],
+["30006","57","Placentia","Lamar","S"],
+["30005","57","Placentia","Lamar","N"],
+["20030","57","Placentia","Lamar","S"],
+["20029","57","Placentia","Lamar","N"],
+["007585","57","Fullerton","Clear Channel","N"],
+["007584","57","Fullerton","Clear Channel","S"],
+["007574","57","Fullerton","Clear Channel","S"],
+["007573","57","Fullerton","Clear Channel","N"],
+["007572","57","Fullerton","Clear Channel","S"],
+["007571","57","Fullerton","Clear Channel","N"],
+["007551","22","Garden Grove","Clear Channel","E"],
+["007550","22","Garden Grove","Clear Channel","W"],
+["007410","5","Buena Park","Clear Channel","E"],
+["007409","5","Buena Park","Clear Channel","W"],
+["007408","5","Buena Park","Clear Channel","E"],
+["007407","5","Buena Park","Clear Channel","W"],
+["007406","91","Buena Park","Clear Channel","E"],
+["007405","91","Buena Park","Clear Channel","W"],
+["007105","22","Garden Grove","Clear Channel","E"],
+["007104","22","Garden Grove","Clear Channel","W"],
+["002108","22","Westminster","Clear Channel","E"],
+["002105","22","Westminster","Clear Channel","W"],
+["002048","55","Santa Ana","Clear Channel","E"],
+["002047","55","Santa Ana","Clear Channel","S"],
+["004449-P","22","Westminster","Clear Channel","E"],
+["901","405","Westminster","Regency Outdoor","S"],
+["900","405","Westminster","Regency Outdoor","N"],
+["447","405","Westminster","Regency Outdoor","S"],
+["321","57","Orange","Regency Outdoor","S"],
+["096","91","Anaheim","Regency Outdoor","W"],
+["093","22","Santa Ana","Regency Outdoor","W"],
+["092","22","Santa Ana","Regency Outdoor","E"],
+["057","57","Orange","Regency Outdoor","N"],
+["056","55","Santa Ana","Regency Outdoor","S"],
+["028","57","Anaheim","Regency Outdoor","S"],
+["027","57","Anaheim","Regency Outdoor","N"],
+["026","57","Anaheim","Regency Outdoor","S"],
+["020","22","Westminster","Regency Outdoor","W"],
+["016","57","Anaheim","Regency Outdoor","N"],
+["1282-D","22","Garden Grove","Outfront Media","E"],
+["1281-D","22","Garden Grove","Outfront Media","W"],
+["1264-D","22","Garden Grove","Outfront Media","W"],
+["1265-D","22","Garden Grove","Outfront Media","E"],
+["637-B","55","Santa Ana","Outfront Media","S"],
+["158-B","22","Westminster","Outfront Media","E"],
+["14252A-B","57","Orange","Outfront Media","N"]
+];
+
+const MARKETS = {
+  DFW:{label:"Dallas–Fort Worth (DFW)", company:"Dallas Billboards LLC", state:"Texas"},
+  LA :{label:"Los Angeles (LA)",            company:"Bray Outdoor Ads",     state:"California"},
+  OC :{label:"Orange County (OC)",          company:"Bray Outdoor Ads",     state:"California"}
+};
+
+const BOARDS = RAW.map(r=>({board:r[0],vendor:r[1],city:r[2],zip:r[3],market:r[4],
+  company:MARKETS[r[4]].company, state:MARKETS[r[4]].state, marketLabel:MARKETS[r[4]].label}));
+
+const MANAGED = MGD.map(r=>({board:r[0],vendor:r[1],city:r[2],zip:r[3],road:r[4],facing:r[5],type:r[6],state:r[7]}));
+const FWY = OCF.map(r=>({board:r[0],fwy:r[1],city:r[2],vendor:r[3],facing:r[4]}));
+
+const ROUND_SIZE = 15;
+const FACE = {N:"North",S:"South",E:"East",W:"West"};
+
+/* ---------- helpers ---------- */
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function uniq(a){return [...new Set(a)];}
+function sample(arr,n,exclude){return shuffle(arr.filter(x=>!exclude.includes(x))).slice(0,n);}
+
+const ALL_VENDORS = uniq(BOARDS.map(b=>b.vendor));
+const ALL_CITIES  = uniq(BOARDS.map(b=>b.city));
+const CITY_ZIPS = {};
+BOARDS.forEach(b=>{ if(b.zip){ (CITY_ZIPS[b.city]=CITY_ZIPS[b.city]||new Set()).add(b.zip); } });
+const ALL_ZIPS = uniq(BOARDS.filter(b=>b.zip).map(b=>b.zip));
+const citiesByCompany = {
+  "Dallas Billboards LLC": uniq(BOARDS.filter(b=>b.company==="Dallas Billboards LLC").map(b=>b.city)),
+  "Bray Outdoor Ads":      uniq(BOARDS.filter(b=>b.company==="Bray Outdoor Ads").map(b=>b.city))
+};
+
+/* managed-board reference pools */
+const MGD_ROADS  = uniq(MANAGED.map(m=>m.road));
+const MGD_CITIES = uniq(MANAGED.map(m=>m.city));
+const MGD_ZIPS   = uniq(MANAGED.filter(m=>m.zip).map(m=>m.zip));
+
+/* freeway reference pools */
+const FWY_LIST   = uniq(FWY.map(f=>f.fwy));               // ["91","22","57","55","5","405"]
+const FWY_CITIES = uniq(FWY.map(f=>f.city));
+const FWY_VENDORS= uniq(FWY.map(f=>f.vendor));
+const fwyName = n => "the "+n+" Fwy";
+
+/* ============================================================
+   QUESTION BUILDERS — general market pool
+   ============================================================ */
+function qZip(b){
+  if(!b.zip) return null;
+  const tz = CITY_ZIPS[b.city];
+  const d = sample(ALL_ZIPS.filter(z=>!tz.has(z)),3,[]);
+  if(d.length<3) return null;
+  return {tag:"ZIP Codes",cls:"",html:`Which ZIP code belongs to a board in <span class="hl">${b.city}, ${b.state==="Texas"?"TX":"CA"}</span>?`,
+    correct:b.zip,options:[b.zip,...d],note:`Board #${b.board} sits in ${b.city} (${b.zip}), ${b.marketLabel}.`};
+}
+function qVendor(b){
+  const d=sample(ALL_VENDORS,3,[b.vendor]); if(d.length<3)return null;
+  return {tag:"Who's There",cls:"",html:`Which vendor operates board <span class="hl">#${b.board}</span> in ${b.city}?`,
+    correct:b.vendor,options:[b.vendor,...d],note:`#${b.board} in ${b.city} is a ${b.vendor} board.`};
+}
+function qBoardCity(b){
+  let pool=uniq(BOARDS.filter(x=>x.market===b.market&&x.city!==b.city).map(x=>x.city));
+  if(pool.length<3)pool=ALL_CITIES.filter(c=>c!==b.city);
+  const d=sample(pool,3,[]); if(d.length<3)return null;
+  return {tag:"Board Numbers",cls:"",html:`Board <span class="hl">#${b.board}</span> is located in which city?`,
+    correct:b.city,options:[b.city,...d],note:`#${b.board} is in ${b.city}, ${b.marketLabel}.`};
+}
+function qBoardMarket(b){
+  const o=sample(Object.values(MARKETS).map(m=>m.label),3,[b.marketLabel]); if(o.length<3)return null;
+  return {tag:"Coverage Areas",cls:"",html:`Board <span class="hl">#${b.board}</span> (${b.city}) is in which market?`,
+    correct:b.marketLabel,options:[b.marketLabel,...o],note:`${b.city} is part of the ${b.marketLabel} market.`};
+}
+function qCompanyCity(b){
+  return {tag:"My Business",cls:"",html:`A billboard in <span class="hl">${b.city}, ${b.state}</span> is handled by which of Cory's agencies?`,
+    correct:b.company,options:["Dallas Billboards LLC","Bray Outdoor Ads","Both agencies share it","Not covered by either"],fixed:true,
+    note:`${b.state} → ${b.company}. (TX = Dallas Billboards LLC; any other state = Bray Outdoor Ads.)`};
+}
+function qCoverageCity(company){
+  const c=pick(citiesByCompany[company]);
+  const other=company==="Dallas Billboards LLC"?"Bray Outdoor Ads":"Dallas Billboards LLC";
+  const d=sample(citiesByCompany[other],3,[]); if(d.length<3)return null;
+  return {tag:"Coverage Areas",cls:"",html:`Which of these cities does <span class="hl">${company}</span> cover?`,
+    correct:c,options:[c,...d],note:`${company} covers ${c}. The others are in ${other}'s territory.`};
+}
+function qMarketState(code){
+  const m=MARKETS[code];
+  return {tag:"Coverage Areas",cls:"",html:`The <span class="hl">${m.label}</span> market is located in which state?`,
+    correct:m.state,options:["California","Texas","Florida","New York"],fixed:true,
+    note:`${m.label} is in ${m.state}, handled by ${m.company}.`};
+}
+
+/* ============================================================
+   QUESTION BUILDERS — Cory's 12 MANAGED boards
+   ============================================================ */
+function mgRoad(m){
+  const d=sample(MGD_ROADS,3,[m.road]); if(d.length<3)return null;
+  return {tag:"My Managed Boards",cls:"managed",html:`Your managed board <span class="hl">${m.board}</span> is on which road / highway?`,
+    correct:m.road,options:[m.road,...d],note:`${m.board} runs along ${m.road} in ${m.city}.`};
+}
+function mgCity(m){
+  const d=sample(MGD_CITIES,3,[m.city]); if(d.length<3)return null;
+  return {tag:"My Managed Boards",cls:"managed",html:`Your managed board <span class="hl">${m.board}</span> is in which city?`,
+    correct:m.city,options:[m.city,...d],note:`${m.board} is in ${m.city}${m.zip?" ("+m.zip+")":""}.`};
+}
+function mgZip(m){
+  if(!m.zip)return null;
+  const d=sample(MGD_ZIPS,3,[m.zip]); if(d.length<3)return null;
+  return {tag:"My Managed Boards",cls:"managed",html:`What ZIP code is your managed board <span class="hl">${m.board}</span> in?`,
+    correct:m.zip,options:[m.zip,...d],note:`${m.board} is in ${m.city} (${m.zip}).`};
+}
+function mgFacing(m){
+  if(!FACE[m.facing])return null;
+  return {tag:"My Managed Boards",cls:"managed",html:`Which direction does your managed board <span class="hl">${m.board}</span> face?`,
+    correct:FACE[m.facing],options:["North","South","East","West"],fixed:true,
+    note:`${m.board} faces ${FACE[m.facing]} (on ${m.road}, ${m.city}).`};
+}
+function mgDigital(){
+  const digi=pick(MANAGED.filter(m=>m.type==="Digital"));
+  const d=sample(MANAGED.filter(m=>m.type!=="Digital").map(m=>m.board),3,[]); if(d.length<3)return null;
+  return {tag:"My Managed Boards",cls:"managed",html:`Which of your managed boards is <span class="hl">DIGITAL</span>?`,
+    correct:digi.board,options:[digi.board,...d],note:`${digi.board} (${digi.road}, ${digi.city}) is digital. Your digital managed faces: the two I-35W boards and the Stanton Rodeo 39 board.`};
+}
+function mgState(m){
+  return {tag:"My Managed Boards",cls:"managed",html:`Your managed board <span class="hl">${m.board}</span> is in which state?`,
+    correct:m.state==="TX"?"Texas":"California",options:["Texas","California","Florida","New York"],fixed:true,
+    note:`${m.board} is in ${m.city}, ${m.state==="TX"?"Texas (Dallas Billboards LLC)":"California (Bray Outdoor Ads)"}.`};
+}
+function managedPool(){
+  const p=[];
+  MANAGED.forEach(m=>{[mgRoad(m),mgCity(m),mgZip(m),mgFacing(m),mgState(m)].forEach(q=>{if(q)p.push(q);});});
+  for(let i=0;i<3;i++)p.push(mgDigital());
+  return p.filter(Boolean);
+}
+
+/* ============================================================
+   QUESTION BUILDERS — every OC FREEWAY board
+   ============================================================ */
+function fwOnWhich(f){
+  const d=sample(FWY_LIST.map(fwyName),3,[fwyName(f.fwy)]); if(d.length<3)return null;
+  return {tag:"OC Freeways",cls:"fwy",html:`OC freeway board <span class="hl">#${f.board}</span> (${f.city}) is on which freeway?`,
+    correct:fwyName(f.fwy),options:[fwyName(f.fwy),...d],note:`#${f.board} is on ${fwyName(f.fwy)} in ${f.city} (${f.vendor}).`};
+}
+function fwCity(f){
+  const d=sample(FWY_CITIES,3,[f.city]); if(d.length<3)return null;
+  return {tag:"OC Freeways",cls:"fwy",html:`OC freeway board <span class="hl">#${f.board}</span> (on ${fwyName(f.fwy)}) is in which city?`,
+    correct:f.city,options:[f.city,...d],note:`#${f.board} sits in ${f.city}, on ${fwyName(f.fwy)}.`};
+}
+function fwVendor(f){
+  const d=sample(FWY_VENDORS,3,[f.vendor]); if(d.length<3)return null;
+  return {tag:"OC Freeways",cls:"fwy",html:`Which vendor operates OC freeway board <span class="hl">#${f.board}</span> on ${fwyName(f.fwy)}?`,
+    correct:f.vendor,options:[f.vendor,...d],note:`#${f.board} on ${fwyName(f.fwy)} (${f.city}) is a ${f.vendor} board.`};
+}
+function fwWhichBoard(){
+  const target=pick(FWY_LIST);
+  const onIt=FWY.filter(f=>f.fwy===target);
+  const offIt=FWY.filter(f=>f.fwy!==target);
+  if(onIt.length<1||offIt.length<3)return null;
+  const correct=pick(onIt).board;
+  const d=sample(offIt.map(f=>f.board),3,[]); if(d.length<3)return null;
+  return {tag:"OC Freeways",cls:"fwy",html:`Which of these boards is on <span class="hl">${fwyName(target)}</span> in Orange County?`,
+    correct:correct,options:[correct,...d],note:`#${correct} is on ${fwyName(target)}. The others run along different OC freeways.`};
+}
+function fwFacing(f){
+  if(!FACE[f.facing])return null;
+  return {tag:"OC Freeways",cls:"fwy",html:`OC freeway board <span class="hl">#${f.board}</span> (${fwyName(f.fwy)}, ${f.city}) faces which direction?`,
+    correct:FACE[f.facing],options:["North","South","East","West"],fixed:true,
+    note:`#${f.board} faces ${FACE[f.facing]}.`};
+}
+function fwyPool(){
+  const p=[];
+  shuffle(FWY).slice(0,20).forEach(f=>{const q=fwOnWhich(f);if(q)p.push(q);});
+  shuffle(FWY).slice(0,14).forEach(f=>{const q=fwCity(f);if(q)p.push(q);});
+  shuffle(FWY).slice(0,12).forEach(f=>{const q=fwVendor(f);if(q)p.push(q);});
+  shuffle(FWY).slice(0,12).forEach(f=>{const q=fwFacing(f);if(q)p.push(q);});
+  for(let i=0;i<10;i++){const q=fwWhichBoard();if(q)p.push(q);}
+  return p.filter(Boolean);
+}
+
+/* ---------- general pool ---------- */
+function generalPool(){
+  const p=[];
+  shuffle(BOARDS.filter(b=>b.zip)).slice(0,18).forEach(b=>{const q=qZip(b);if(q)p.push(q);});
+  shuffle(BOARDS).slice(0,18).forEach(b=>{const q=qVendor(b);if(q)p.push(q);});
+  shuffle(BOARDS).slice(0,18).forEach(b=>{const q=qBoardCity(b);if(q)p.push(q);});
+  shuffle(BOARDS).slice(0,10).forEach(b=>{const q=qBoardMarket(b);if(q)p.push(q);});
+  shuffle(BOARDS).slice(0,8).forEach(b=>{const q=qCompanyCity(b);if(q)p.push(q);});
+  for(let i=0;i<6;i++){const q=qCoverageCity(pick(["Dallas Billboards LLC","Bray Outdoor Ads"]));if(q)p.push(q);}
+  Object.keys(MARKETS).forEach(c=>p.push(qMarketState(c)));
+  return p.filter(Boolean);
+}
+
+/* finalize options (shuffle unless fixed) + dedupe by prompt */
+function finalize(list){
+  const seen=new Set(),out=[];
+  for(const q of list){
+    if(seen.has(q.html))continue; seen.add(q.html);
+    q.options=q.fixed?q.options.slice():shuffle(q.options);
+    out.push(q);
+  }
+  return out;
+}
+
+/* Round = guaranteed mix of managed + OC-freeway + general, reshuffled each play */
+function buildRound(){
+  const managed=shuffle(finalize(managedPool()));
+  const fwy=shuffle(finalize(fwyPool()));
+  const general=shuffle(finalize(generalPool()));
+  const round=[];
+  round.push(...managed.slice(0,4));   // ~4 of Cory's managed boards
+  round.push(...fwy.slice(0,5));        // ~5 OC freeway
+  round.push(...general.slice(0, ROUND_SIZE-round.length)); // fill rest
+  return shuffle(round).slice(0,ROUND_SIZE);
+}
+
+/* ============================================================
+   GAME STATE + RENDER
+   ============================================================ */
+let questions=[], idx=0, score=0, answered=false;
+const screen=document.getElementById("screen");
+
+function start(){
+  questions=buildRound();
+  idx=0; score=0; answered=false;
+  renderQuestion();
+}
+
+function renderStart(){
+  screen.innerHTML=`
+    <div class="center">
+      <div class="tag">${BOARDS.length+MANAGED.length+FWY.length} real records loaded</div>
+      <p class="lead">Trivia built straight from your live BrayPro inventory &mdash; board numbers, ZIPs, vendors, your 12 managed boards, and every OC freeway.</p>
+      <ul class="facts">
+        <li><b>Your 12 managed boards</b> &mdash; roads, cities, ZIPs, facing &amp; digital vs static</li>
+        <li><b>Every OC freeway</b> (the 5, 22, 55, 57, 91 &amp; 405) &mdash; all ${FWY.length} freeway boards</li>
+        <li><b>DFW / OC / LA</b> general inventory &mdash; ${BOARDS.length} boards</li>
+        <li>${ROUND_SIZE} questions per round, reshuffled every time</li>
+      </ul>
+      <button class="btn-primary" id="startBtn">&#9654;&nbsp;&nbsp;Start Game</button>
+    </div>`;
+  document.getElementById("startBtn").onclick=start;
+}
+
+function renderQuestion(){
+  answered=false;
+  const q=questions[idx];
+  const pct=Math.round((idx)/questions.length*100);
+  screen.innerHTML=`
+    <div class="topbar">
+      <span class="pill">Question <b>${idx+1}</b> / ${questions.length}</span>
+      <span class="pill">Score <b>${score}</b></span>
+    </div>
+    <div class="bar"><span style="width:${pct}%"></span></div>
+    <div class="tag ${q.cls||''}">${q.tag}</div>
+    <p class="q">${q.html}</p>
+    <div class="opts" id="opts"></div>
+    <div class="feedback" id="fb"></div>
+    <div class="hint" id="hint"><span class="up">&#8593;</span> Tap an answer to lock it in</div>
+    <button class="next" id="next">${idx+1<questions.length?"Next Question &rarr;":"See Results &rarr;"}</button>
+  `;
+  const optsEl=document.getElementById("opts");
+  q.options.forEach((opt,i)=>{
+    const b=document.createElement("button");
+    b.className="opt";
+    b.innerHTML=`<span class="ic">${String.fromCharCode(65+i)}</span><span>${opt}</span>`;
+    b.onclick=()=>choose(opt,b);
+    optsEl.appendChild(b);
+  });
+  document.getElementById("next").onclick=nextQuestion;
+}
+
+function choose(opt,btn){
+  if(answered) return;
+  answered=true;
+  const q=questions[idx];
+  [...document.querySelectorAll(".opt")].forEach(b=>{
+    b.disabled=true;
+    const label=b.querySelector("span:last-child").textContent;
+    if(label===q.correct){ b.classList.add("correct"); b.querySelector(".ic").textContent="✓"; }
+    else if(b===btn){ b.classList.add("wrong"); b.querySelector(".ic").textContent="✗"; }
+    else { b.classList.add("dim"); }
+  });
+  const fb=document.getElementById("fb");
+  if(opt===q.correct){ score++; fb.className="feedback good"; fb.innerHTML=`Correct! <small>${q.note}</small>`; }
+  else { fb.className="feedback bad"; fb.innerHTML=`Not quite &mdash; answer: <b>${q.correct}</b><small>${q.note}</small>`; }
+  const hint=document.getElementById("hint"); if(hint) hint.style.display="none";
+  const nx=document.getElementById("next");
+  nx.classList.add("show");
+  nx.scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+function nextQuestion(){
+  idx++;
+  if(idx<questions.length){ renderQuestion(); } else { renderEnd(); }
+}
+
+function renderEnd(){
+  const total=questions.length;
+  const pct=Math.round(score/total*100);
+  let verdict,color;
+  if(pct===100){verdict="🏆 Perfect round — you know every board!";color="var(--green)";}
+  else if(pct>=80){verdict="🔥 Sharp — you know your inventory.";color="var(--green)";}
+  else if(pct>=60){verdict="👍 Solid. A few boards slipped by.";color="var(--blue)";}
+  else if(pct>=40){verdict="📈 Room to grow — run it back.";color="var(--accent)";}
+  else{verdict="🗺️ Time to study the map!";color="var(--red)";}
+  screen.innerHTML=`
+    <div class="center">
+      <div class="tag">Round Complete</div>
+      <div class="score-num">${score}<span>/${total}</span></div>
+      <div class="verdict" style="color:${color}">${verdict}</div>
+      <div class="stats">
+        <div class="stat"><b>${pct}%</b><small>accuracy</small></div>
+        <div class="stat"><b>${score}</b><small>correct</small></div>
+        <div class="stat"><b>${total-score}</b><small>missed</small></div>
+      </div>
+      <button class="btn-primary" id="again">&#128260;&nbsp;&nbsp;Play Again</button>
+    </div>`;
+  document.getElementById("again").onclick=start;
+}
+
+renderStart();
+</script>
+</body>
+</html>
