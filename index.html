@@ -365,7 +365,6 @@ const FWY_BY = {}; FWY.forEach(f=>{(FWY_BY[f.fwy]=FWY_BY[f.fwy]||[]).push(f);});
 const CITY_INDEX = {};
 function addCity(c,o){ if(!c)return; (CITY_INDEX[c]=CITY_INDEX[c]||[]).push(o); }
 FWY.forEach(f=>addCity(f.city,{board:f.board,who:f.vendor,where:fwyName(f.fwy)}));
-BOARDS.forEach(b=>addCity(b.city,{board:b.board,who:b.vendor,where:b.marketLabel}));
 MANAGED.forEach(m=>addCity(m.city,{board:m.board,who:m.vendor,where:m.road+" (managed)"}));
 
 /* ============================================================
@@ -535,11 +534,9 @@ function finalize(list){
 function buildRound(){
   const managed=shuffle(finalize(managedPool()));
   const fwy=shuffle(finalize(fwyPool()));
-  const general=shuffle(finalize(generalPool()));
   const round=[];
-  round.push(...managed.slice(0,4));
-  round.push(...fwy.slice(0,6));
-  round.push(...general.slice(0, ROUND_SIZE-round.length));
+  round.push(...managed.slice(0,7));
+  round.push(...fwy.slice(0, ROUND_SIZE-round.length));
   return shuffle(round).slice(0,ROUND_SIZE);
 }
 
@@ -614,12 +611,11 @@ function start(){ questions=buildRound(); idx=0; score=0; answered=false; render
 function renderStart(){
   screen.innerHTML=`
     <div class="center">
-      <div class="tag">${BOARDS.length+MANAGED.length+FWY.length} real records loaded</div>
-      <p class="lead">Trivia built straight from your live BrayPro inventory &mdash; now with a tap-to-explore <b>Board details</b> panel after every answer.</p>
+      <div class="tag">${MANAGED.length+FWY.length} real records &mdash; OC freeways + your boards</div>
+      <p class="lead">Focused trivia on the inventory you care about most &mdash; every Orange County freeway board and all the boards you personally manage. Tap-to-explore <b>Board details</b> after every answer.</p>
       <ul class="facts">
-        <li><b>Your 12 managed boards</b> &mdash; roads, cities, ZIPs, facing &amp; digital vs static</li>
-        <li><b>Every OC freeway</b> (the 5, 22, 55, 57, 91 &amp; 405) &mdash; all ${FWY.length} freeway boards, facing &amp; size</li>
-        <li><b>DFW / OC / LA</b> general inventory &mdash; ${BOARDS.length} boards</li>
+        <li><b>Your managed boards</b> (${MANAGED.length}) &mdash; roads, cities, ZIPs, facing &amp; digital vs static</li>
+        <li><b>Every OC freeway</b> (the 5, 22, 55, 57, 91 &amp; 405) &mdash; all ${FWY.length} freeway boards, verified &amp; deduped against BrayPro</li>
         <li>After each answer: full board record + "other boards on the freeway / in the city"</li>
       </ul>
       <button class="btn-primary" id="startBtn">&#9654;&nbsp;&nbsp;Start Game</button>
